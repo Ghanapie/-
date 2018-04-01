@@ -1,17 +1,24 @@
+#include"ListTemplate.h"
 #include<stdlib.h>
 #include<stdio.h>
 #include<math.h>
 #include<time.h>
 #include<GL/glut.h>
 
+//데이터 구조체
+struct coord {
+	int x;
+	int y;
+	coord(int x, int y) { this->x = x, this->y = y; }
+};
+
+//좌표를 담을 리스트
+List<coord> list;
+
 GLfloat random[3] = { 1.0 };	//랜덤 RGB
 GLfloat spin = 0;	//회전 확인
 
-					//중점좌표
-int matrix_x[100] = { 0 };
-int matrix_y[100] = { 0 };
-
-//중점좌표 인덱스
+					//중점좌표 인덱스
 int index_x = 0;
 int index_y = 0;
 
@@ -35,8 +42,13 @@ void drawLines()
 
 	glBegin(GL_LINE_STRIP);
 	{
-		for (int i = 0; i < index_x; i++)
-			glVertex2f(matrix_x[i], matrix_y[i]);
+		Node<coord> *current = list.Head;
+
+		while (current != NULL)
+		{
+			glVertex2f(current->data.x, current->data.y);
+			current = current->NextNode;
+		}
 	}
 	glEnd();
 }
@@ -73,8 +85,7 @@ void mouseProcess(int button, int state, int x, int y)
 	if (button == GLUT_LEFT_BUTTON && state == GLUT_DOWN)
 	{
 		//matrix에 클릭시 나오는 좌표 입력
-		matrix_x[index_x++] = x;
-		matrix_y[index_y++] = reshape_y - y;
+		addNode(&list, createNode(coord(x, reshape_y - y)));
 	}
 
 	if (button == GLUT_RIGHT_BUTTON && state == GLUT_DOWN)
@@ -112,16 +123,18 @@ void display()
 
 	drawLines();	//별 중점들을 연결하는 선 그리기
 
-	for (int i = 0; i < index_x; i++)
+	Node<coord> *current = list.Head;
+	while (current != NULL)
 	{
 		glPushMatrix();
 		{
-			glTranslated(matrix_x[i], matrix_y[i], 0);	//좌표 이동
+			glTranslated(current->data.x, current->data.y, 0);	//좌표 이동
 			glRotatef(angle * 3, 0, 0, 1);				//별 회전
 			glScalef(2, 2, 1);							//별 크기 조정
 			draw_stars(25);								//별 그리기
 		}
 		glPopMatrix();
+		current = current->NextNode;
 	}
 	glutSwapBuffers();
 	glutPostRedisplay();
@@ -129,6 +142,7 @@ void display()
 
 int main(int argc, char** argv)
 {
+	list.Head = NULL;
 	srand(time(NULL));
 	glutInit(&argc, argv);
 	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB);
