@@ -15,24 +15,20 @@ struct coord {
 //좌표를 담을 리스트
 List<coord> list;
 
-GLfloat random[3] = { 1.0 };	//랜덤 RGB
+GLfloat random[3] = { 1,1,0};	//랜덤 RGB
 GLfloat spin = 0;	//회전 확인
-
-					//중점좌표 인덱스
-int index_x = 0;
-int index_y = 0;
 
 int rotate = 0;	//회전 방향
 
-float reshape_x, reshape_y;	//스크린사이즈 조정
+float reshapeX, reshapeY;	//스크린사이즈 조정
 float angle = 0;	//회전 속도
 
 
 					//스크린 사이즈 동기화
-void reshape(int w, int h)
+void reShape(int w, int h)
 {
-	reshape_x = w;
-	reshape_y = h;
+	reshapeX = w;
+	reshapeY = h;
 }
 
 void drawLines()
@@ -53,7 +49,7 @@ void drawLines()
 	glEnd();
 }
 
-void draw_stars(int tri_l)
+void drawStars(int triangleLength)
 {
 
 	//별 색 랜덤으로 나오게 설정
@@ -63,18 +59,18 @@ void draw_stars(int tri_l)
 	//첫번째 삼각형
 	glBegin(GL_TRIANGLES);
 	{
-		glVertex2f(0, tri_l / sqrt(3));
-		glVertex2f(-tri_l / 2, -tri_l / (2 * sqrt(3)));
-		glVertex2f(tri_l / 2, -tri_l / (2 * sqrt(3)));
+		glVertex2f(0, triangleLength / sqrt(3));
+		glVertex2f(-triangleLength / 2, -triangleLength / (2 * sqrt(3)));
+		glVertex2f(triangleLength / 2, -triangleLength / (2 * sqrt(3)));
 	}
 	glEnd();
 
 	//두번째 삼각형
 	glBegin(GL_TRIANGLES);
 	{
-		glVertex2f(-tri_l / 2, tri_l / (2 * sqrt(3)));
-		glVertex2f(0, -tri_l / sqrt(3));
-		glVertex2f(tri_l / 2, tri_l / (2 * sqrt(3)));
+		glVertex2f(-triangleLength / 2, triangleLength / (2 * sqrt(3)));
+		glVertex2f(0, -triangleLength / sqrt(3));
+		glVertex2f(triangleLength / 2, triangleLength / (2 * sqrt(3)));
 	}
 	glEnd();
 }
@@ -85,7 +81,7 @@ void mouseProcess(int button, int state, int x, int y)
 	if (button == GLUT_LEFT_BUTTON && state == GLUT_DOWN)
 	{
 		//matrix에 클릭시 나오는 좌표 입력
-		addNode(&list, createNode(coord(x, reshape_y - y)));
+		addNode(&list, createNode(coord(x, reshapeY - y)));
 	}
 
 	if (button == GLUT_RIGHT_BUTTON && state == GLUT_DOWN)
@@ -98,6 +94,7 @@ void mouseProcess(int button, int state, int x, int y)
 	if (button == GLUT_MIDDLE_BUTTON && state == GLUT_DOWN)
 	{
 		printf("Middle mouse button\n");
+		//랜덤 수 지정
 		for (int i = 0; i<3; i++)
 			random[i] = (float)rand() / RAND_MAX;
 	}
@@ -106,6 +103,7 @@ void mouseProcess(int button, int state, int x, int y)
 
 void ideCallBack()
 {
+	//회전 속도 고정
 	angle += rotate * 0.75;
 	glutPostRedisplay();
 }
@@ -123,7 +121,9 @@ void display()
 
 	drawLines();	//별 중점들을 연결하는 선 그리기
 
+	//좌표 노드 헤더
 	Node<coord> *current = list.Head;
+
 	while (current != NULL)
 	{
 		glPushMatrix();
@@ -131,10 +131,11 @@ void display()
 			glTranslated(current->data.x, current->data.y, 0);	//좌표 이동
 			glRotatef(angle * 3, 0, 0, 1);				//별 회전
 			glScalef(2, 2, 1);							//별 크기 조정
-			draw_stars(25);								//별 그리기
+			drawStars(25);								//별 그리기
 		}
 		glPopMatrix();
-		current = current->NextNode;
+
+		current = current->NextNode;	//다음 노드로 지정
 	}
 	glutSwapBuffers();
 	glutPostRedisplay();
@@ -144,6 +145,7 @@ int main(int argc, char** argv)
 {
 	list.Head = NULL;
 	srand(time(NULL));
+
 	glutInit(&argc, argv);
 	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB);
 	glClearColor(0.0, 0.0, 0.0, 0.0);
@@ -154,7 +156,7 @@ int main(int argc, char** argv)
 	glutDisplayFunc(display);
 	glutMouseFunc(mouseProcess);
 	glutIdleFunc(ideCallBack);
-	glutReshapeFunc(reshape);
+	glutReshapeFunc(reShape);
 	glutMainLoop();
 
 	return 0;
